@@ -1,0 +1,14 @@
+{
+	"name": "Rust Codespace",
+	"extensions": [
+		"shardulm94.trailing-spaces",
+		"rust-lang.rust-analyzer",
+		"serayuzgur.crates",
+		"vadimcn.vscode-lldb",
+		"dustypomerleau.rust-syntax"
+	],
+	"dockerFile": "Dockerfile",
+	"settings": {
+		"terminal.integrated.defaultProfile.linux": "zsh",
+	}
+}
