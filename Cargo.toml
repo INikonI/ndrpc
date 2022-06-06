@@ -9,5 +9,7 @@ edition = "2021"
 sys-info = "*"
 sysinfo = "*"
 discord-rich-presence = "*"
-precord-core = "*"
 chrono = "*"
+
+[target.'cfg(windows)'.dependencies]
+wmi = "*"
