@@ -5,10 +5,11 @@
 		"rust-lang.rust-analyzer",
 		"serayuzgur.crates",
 		"vadimcn.vscode-lldb",
-		"dustypomerleau.rust-syntax"
+		"dustypomerleau.rust-syntax",
+		"bungcip.better-toml"
 	],
 	"dockerFile": "Dockerfile",
 	"settings": {
-		"terminal.integrated.defaultProfile.linux": "zsh",
+		"terminal.integrated.defaultProfile.linux": "zsh"
 	}
 }
