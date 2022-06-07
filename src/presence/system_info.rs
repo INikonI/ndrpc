@@ -125,7 +125,7 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
                         println!("Client reconnected!");
                     } else {
                         update_fails += 1;
-                        eprintln!("Activity update failed")
+                        eprintln!("Activity update failed");
                     }
                 }
             }
@@ -217,7 +217,7 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
                         println!("Client reconnected!");
                     } else {
                         update_fails += 1;
-                        eprintln!("Activity update failed")
+                        eprintln!("Activity update failed");
                     }
                 }
             }
