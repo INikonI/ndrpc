@@ -16,11 +16,16 @@ use utils::prompt;
 #[cfg(target_os = "windows")]
 fn main() {
     use std::collections::HashMap;
+    use sysinfo::CpuRefreshKind;
     use wmi::{COMLibrary, Variant, WMIConnection};
 
     // info providers
     let wmi_con = WMIConnection::new(COMLibrary::new().unwrap().into()).unwrap();
-    let mut sysinfo_system = sysinfo::System::new_with_specifics(RefreshKind::new().with_memory());
+    let mut sysinfo_system = sysinfo::System::new_with_specifics(
+        RefreshKind::new()
+            .with_cpu(CpuRefreshKind::new())
+            .with_memory(),
+    );
 
     // precompute some info
     let max_freq: f64 = {
@@ -43,28 +48,16 @@ fn main() {
         .physical_core_count()
         .expect("Failed to get physical core count");
     let logical_cores: usize = sysinfo_system.cpus().len();
-    let cpu_brand: String = sysinfo_system
-        .global_cpu_info()
-        .brand()
-        .trim()
-        .to_owned();
+    let cpu_brand: String = sysinfo_system.global_cpu_info().brand().trim().to_owned();
     let total_memory: f64 = (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
     // Discord RPC init
-    let app_id: String = {
+    let (app_id, large_image) = {
         let input = prompt("Enter app id (optional):").unwrap();
         if input.len() > 16 && input.len() < 26 && input.parse::<u64>().is_ok() {
-            input
+            (input, prompt("Enter image key or url (optional):").unwrap())
         } else {
-            "983347731823210567".to_owned()
-        }
-    };
-    let large_image_key: String = {
-        let input = prompt("Enter image key (optional):").unwrap();
-        if !input.is_empty() {
-            input
-        } else {
-            "shark".to_owned()
+            ("983347731823210567".to_owned(), "shark".to_owned())
         }
     };
     let mut drpc = DiscordIpcClient::new(&app_id).expect("Failed to create client");
@@ -108,7 +101,11 @@ fn main() {
                     "{:.2} GHz | {}/{} Cores | {}",
                     current_freq, &physical_cores, &logical_cores, &cpu_brand
                 ))
-                .assets(Assets::new().large_image(&large_image_key))
+                .assets(if large_image.is_empty() {
+                    Assets::new()
+                } else {
+                    Assets::new().large_image(&large_image)
+                })
                 .timestamps(
                     Timestamps::new().start(
                         SystemTime::now()
@@ -131,7 +128,11 @@ fn main() {
 #[cfg(not(target_os = "windows"))]
 fn main() {
     // info providers
-    let mut sysinfo_system = sysinfo::System::new_with_specifics(RefreshKind::new().with_memory());
+    let mut sysinfo_system = sysinfo::System::new_with_specifics(
+        RefreshKind::new()
+            .with_cpu(CpuRefreshKind::new())
+            .with_memory(),
+    );
 
     // precompute some info
     let physical_cores: usize = sysinfo_system
@@ -142,20 +143,12 @@ fn main() {
     let total_memory: f64 = (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
     // Discord RPC init
-    let app_id: String = {
+    let (app_id, large_image) = {
         let input = prompt("Enter app id (optional):").unwrap();
         if input.len() > 16 && input.len() < 26 && input.parse::<u64>().is_ok() {
-            input
+            (input, prompt("Enter image key or url (optional):").unwrap())
         } else {
-            "983347731823210567".to_owned()
-        }
-    };
-    let large_image_key: String = {
-        let input = prompt("Enter image key (optional):").unwrap();
-        if !input.is_empty() {
-            input
-        } else {
-            "shark".to_owned()
+            ("983347731823210567".to_owned(), "shark".to_owned())
         }
     };
     let mut drpc = DiscordIpcClient::new(&app_id).expect("Failed to create client");
@@ -184,7 +177,11 @@ fn main() {
                     "{:.2} GHz | {}/{} Cores | {}",
                     current_freq, &physical_cores, &logical_cores, &cpu_brand
                 ))
-                .assets(Assets::new().large_image(&large_image_key))
+                .assets(if large_image.is_empty() {
+                    Assets::new()
+                } else {
+                    Assets::new().large_image(&large_image)
+                })
                 .timestamps(
                     Timestamps::new().start(
                         SystemTime::now()
