@@ -44,10 +44,10 @@ fn main() {
             0.0
         }
     };
-    let physical_cores: usize = sysinfo_system
+    let physical_cores: u8 = sysinfo_system
         .physical_core_count()
-        .expect("Failed to get physical core count");
-    let logical_cores: usize = sysinfo_system.cpus().len();
+        .expect("Failed to get physical core count") as u8;
+    let logical_cores: u8 = sysinfo_system.cpus().len() as u8;
     let cpu_brand: String = sysinfo_system.global_cpu_info().brand().trim().to_owned();
     let total_memory: f64 = (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
@@ -70,6 +70,7 @@ fn main() {
     println!("Client connected!");
 
     // main loop
+    let mut update_fails: u8 = 0;
     loop {
         let used_memory: f64 = (sysinfo_system.used_memory() as f64 / 1024_f64 / 1024_f64).round();
         let current_freq: f64 = {
@@ -117,10 +118,23 @@ fn main() {
                 ),
         ) {
             Ok(_) => println!("Activity updated"),
-            Err(_) => eprintln!("Activity update failed"),
+            Err(_) => {
+                if update_fails > 2 {
+                    update_fails = 0;
+                    println!("Trying to reconnect...");
+                    while drpc.reconnect().is_err() {
+                        eprintln!("Failed to reconnect. Trying again...");
+                        sleep(Duration::from_millis(100));
+                    }
+                    println!("Client reconnected!");
+                } else {
+                    update_fails += 1;
+                    eprintln!("Activity update failed")
+                }
+            },
         }
 
-        sleep(Duration::from_millis(4001));
+        sleep(Duration::from_millis(4010));
         sysinfo_system.refresh_memory();
     }
 }
@@ -135,10 +149,10 @@ fn main() {
     );
 
     // precompute some info
-    let physical_cores: usize = sysinfo_system
+    let physical_cores: u8 = sysinfo_system
         .physical_core_count()
-        .expect("Failed to get physical core count");
-    let logical_cores: usize = sysinfo_system.cpus().len();
+        .expect("Failed to get physical core count") as u8;
+    let logical_cores: u8 = sysinfo_system.cpus().len() as u8;
     let cpu_brand: String = sysinfo_system.global_cpu_info().brand().trim().to_owned();
     let total_memory: f64 = (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
@@ -161,6 +175,7 @@ fn main() {
     println!("Client connected!");
 
     // main loop
+    let mut update_fails: u8 = 0;
     loop {
         let used_memory: f64 = (sysinfo_system.used_memory() as f64 / 1024_f64 / 1024_f64).round();
         let current_freq: f64 = sysinfo_system.global_cpu_info().frequency() as f64 / 1000_f64;
@@ -193,10 +208,23 @@ fn main() {
                 ),
         ) {
             Ok(_) => println!("Activity updated"),
-            Err(_) => eprintln!("Activity update failed"),
+            Err(_) => {
+                if update_fails > 2 {
+                    update_fails = 0;
+                    println!("Trying to reconnect...");
+                    while drpc.reconnect().is_err() {
+                        eprintln!("Failed to reconnect. Trying again...");
+                        sleep(Duration::from_millis(100));
+                    }
+                    println!("Client reconnected!");
+                } else {
+                    update_fails += 1;
+                    eprintln!("Activity update failed")
+                }
+            },
         }
 
-        sleep(Duration::from_millis(4001));
+        sleep(Duration::from_millis(4010));
         sysinfo_system.refresh_memory();
     }
 }
