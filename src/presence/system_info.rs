@@ -151,6 +151,9 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
         let total_memory: f64 =
             (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
+        let config_assets: Option<config::Assets> = config.assets.take();
+        drop(config);
+
         let mut update_fails: u8 = 0;
         loop {
             let used_memory: f64 =
@@ -169,7 +172,7 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
                         "{:.2} GHz | {}/{} Cores | {}",
                         current_freq, &physical_cores, &logical_cores, &cpu_brand
                     ))
-                    .assets(if let Some(ref assets) = config.assets {
+                    .assets(if let Some(ref assets) = config_assets {
                         let mut ab = Assets::new();
 
                         if let Some(ref large_image) = assets.large_image {
