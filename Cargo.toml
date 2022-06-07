@@ -10,6 +10,8 @@ sys-info = "*"
 sysinfo = "*"
 discord-rich-presence = "*"
 chrono = "*"
+serde = { version = "*", features = ["derive"] }
+serde_yaml = "*"
 
 [target.'cfg(windows)'.dependencies]
 wmi = "*"
