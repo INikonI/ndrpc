@@ -1,20 +1,17 @@
+# application id from discord developers portal
 app_id: 602317448263499806
 
-type: "Custom" # Custom | SystemInfo
+# CustomStatic - Static full custom presence
+# CustomDynamic - Presence which changes every 4 secs
+# SystemInfo - Presence with system info and assets from static preset
+type: "SystemInfo"
 
-details: "Details" # text
-state: "State" # text
+# name of preset for CustomStatic presence type
+static_preset_name: "some_preset"
 
-assets:
-  large_image: "dev" # url or image key
-  large_text: "Text of large image" # text
-  small_image: "dev" # url or image key
-  small_text: "Text of small image" # text
+# names of presets for CustomDynamic presence type
+dynamic_preset_names:
+  - "other_preset"
+  - "some_preset"
 
-timestamp: false # true or false
-
-buttons:
-  - label: "Button 1" # text
-    url: "https://discord.com" # url
-  - label: "Button 2" # text
-    url: "https://discord.com" # url
+with_elapsed_time: true # true or false

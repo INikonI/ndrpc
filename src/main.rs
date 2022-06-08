@@ -1,29 +1,25 @@
 mod model;
 mod presence;
+mod util;
 
 use discord_rich_presence::{DiscordIpc, DiscordIpcClient};
-use std::{fs::read_to_string, io::stdin, thread::sleep, time::Duration};
+use std::{thread::sleep, time::Duration};
 
-use crate::model::config::{Config, PresenceKind};
+use crate::{
+    model::{
+        config::{Config, PresenceKind},
+        preset::Preset,
+    },
+    util::{parse_yaml_file, wait_input},
+};
 
 fn main() {
-    let config: Config = {
-        let config_file_content: String = match read_to_string("config.yaml") {
-            Ok(content) => content,
-            Err(_) => {
-                eprintln!("Failed to read config or config not found");
-                _ = stdin().read_line(&mut String::new());
-                return;
-            }
-        };
-
-        match serde_yaml::from_str(&config_file_content) {
-            Ok(config) => config,
-            Err(_) => {
-                eprintln!("Failed to parse config");
-                _ = stdin().read_line(&mut String::new());
-                return;
-            }
+    let config: Config = match parse_yaml_file("config.yaml") {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("{}", err);
+            wait_input();
+            return;
         }
     };
 
@@ -37,7 +33,82 @@ fn main() {
     println!("Client connected!");
 
     match config.kind {
-        PresenceKind::Custom => presence::custom::start(drpc, config),
-        PresenceKind::SystemInfo => presence::system_info::start(drpc, config),
+        PresenceKind::CustomStatic => {
+            let static_preset: Preset = {
+                let preset_name: String = match config.static_preset_name {
+                    Some(name) => name,
+                    None => {
+                        eprintln!("Static preset name not found");
+                        wait_input();
+                        return;
+                    }
+                };
+                match parse_yaml_file(&format!("./presets/{}.yaml", preset_name)) {
+                    Ok(preset) => preset,
+                    Err(err) => {
+                        eprintln!("{}", err);
+                        wait_input();
+                        return;
+                    }
+                }
+            };
+            presence::custom_static::start(
+                drpc,
+                static_preset,
+                config.with_elapsed_time.unwrap_or_default(),
+            );
+        }
+        PresenceKind::CustomDynamic => {
+            let preset_names: Vec<String> = match config.dynamic_preset_names {
+                Some(names) => names,
+                None => {
+                    eprintln!("Dynamic preset names not found");
+                    wait_input();
+                    return;
+                }
+            };
+            let presets: Vec<Preset> = {
+                let mut presets = Vec::new();
+                for preset_name in preset_names {
+                    let preset: Preset =
+                        match parse_yaml_file(&format!("./presets/{}.yaml", preset_name)) {
+                            Ok(preset) => preset,
+                            Err(err) => {
+                                eprintln!("{}", err);
+                                wait_input();
+                                return;
+                            }
+                        };
+                    presets.push(preset);
+                }
+                presets
+            };
+            presence::custom_dynamic::start(
+                drpc,
+                presets,
+                config.with_elapsed_time.unwrap_or_default(),
+            );
+        }
+        PresenceKind::SystemInfo => {
+            let static_preset: Preset = {
+                let preset_name: String = match config.static_preset_name {
+                    Some(name) => name,
+                    None => {
+                        eprintln!("Static preset name not found");
+                        wait_input();
+                        return;
+                    }
+                };
+                match parse_yaml_file(&format!("./presets/{}.yaml", preset_name)) {
+                    Ok(preset) => preset,
+                    Err(err) => {
+                        eprintln!("{}", err);
+                        wait_input();
+                        return;
+                    }
+                }
+            };
+            presence::system_info::start(drpc, static_preset);
+        }
     }
 }

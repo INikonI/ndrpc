@@ -2,23 +2,12 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub enum PresenceKind {
-    Custom,
+    #[serde(alias = "customstatic")]
+    CustomStatic,
+    #[serde(alias = "customdynamic")]
+    CustomDynamic,
+    #[serde(alias = "systeminfo")]
     SystemInfo,
-}
-
-#[derive(Deserialize)]
-pub struct Assets {
-    pub large_image: Option<String>,
-    pub large_text: Option<String>,
-
-    pub small_image: Option<String>,
-    pub small_text: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct Button {
-    pub label: String,
-    pub url: String,
 }
 
 #[derive(Deserialize)]
@@ -28,12 +17,8 @@ pub struct Config {
     #[serde(alias = "type")]
     pub kind: PresenceKind,
 
-    pub state: Option<String>,
-    pub details: Option<String>,
+    pub static_preset_name: Option<String>,
+    pub dynamic_preset_names: Option<Vec<String>>,
 
-    pub assets: Option<Assets>,
-
-    pub timestamp: Option<bool>,
-
-    pub buttons: Option<Vec<Button>>,
+    pub with_elapsed_time: Option<bool>,
 }

@@ -10,9 +10,9 @@ use std::{
 use sys_info::loadavg as cpu_usage;
 use sysinfo::{CpuExt, RefreshKind, SystemExt};
 
-use crate::model::config::{self, Config};
+use crate::model::preset::{self, Preset};
 
-pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
+pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
     #[cfg(target_os = "windows")]
     {
         use std::collections::HashMap;
@@ -44,8 +44,8 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
         let total_memory: f64 =
             (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
-        let config_assets: Option<config::Assets> = config.assets.take();
-        drop(config);
+        let preset_assets: Option<preset::Assets> = preset.assets.take();
+        drop(preset);
 
         let mut update_fails: u8 = 0;
         loop {
@@ -53,8 +53,8 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
                 (sysinfo_system.used_memory() as f64 / 1024_f64 / 1024_f64).round();
             let current_freq: f64 = {
                 let result: Vec<HashMap<String, Variant>> = wmi_con
-                .raw_query("SELECT PercentProcessorPerformance FROM Win32_PerfFormattedData_Counters_ProcessorInformation WHERE Name LIKE \"_Total\"")
-                .unwrap();
+                    .raw_query("SELECT PercentProcessorPerformance FROM Win32_PerfFormattedData_Counters_ProcessorInformation WHERE Name LIKE \"_Total\"")
+                    .unwrap();
                 let percent_perfomance: f64 = if let Variant::UI8(val) = result
                     .first()
                     .unwrap()
@@ -80,7 +80,7 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
                         "{:.2} GHz | {}/{} Cores | {}",
                         current_freq, &physical_cores, &logical_cores, &cpu_brand
                     ))
-                    .assets(if let Some(ref assets) = config_assets {
+                    .assets(if let Some(ref assets) = preset_assets {
                         let mut ab = Assets::new();
 
                         if let Some(ref large_image) = assets.large_image {
@@ -151,8 +151,8 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
         let total_memory: f64 =
             (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
-        let config_assets: Option<config::Assets> = config.assets.take();
-        drop(config);
+        let preset_assets: Option<preset::Assets> = preset.assets.take();
+        drop(preset);
 
         let mut update_fails: u8 = 0;
         loop {
@@ -172,7 +172,7 @@ pub fn start(mut drpc: DiscordIpcClient, mut config: Config) {
                         "{:.2} GHz | {}/{} Cores | {}",
                         current_freq, &physical_cores, &logical_cores, &cpu_brand
                     ))
-                    .assets(if let Some(ref assets) = config_assets {
+                    .assets(if let Some(ref assets) = preset_assets {
                         let mut ab = Assets::new();
 
                         if let Some(ref large_image) = assets.large_image {

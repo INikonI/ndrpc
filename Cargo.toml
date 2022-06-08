@@ -1,5 +1,5 @@
 [package]
-name = "shark_presence"
+name = "ndrpc"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,6 +12,7 @@ discord-rich-presence = "*"
 chrono = "*"
 serde = { version = "*", features = ["derive"] }
 serde_yaml = "*"
+anyhow = "*"
 
 [target.'cfg(windows)'.dependencies]
 wmi = "*"
