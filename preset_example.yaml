@@ -1,0 +1,14 @@
+details: "Details" # text
+state: "State" # text
+
+assets:
+  large_image: "dev" # url or image key
+  large_text: "Text of large image" # text
+  small_image: "dev" # url or image key
+  small_text: "Text of small image" # text
+
+buttons:
+  - label: "Button 1" # text
+    url: "https://discord.com" # url
+  - label: "Button 2" # text
+    url: "https://discord.com" # url
