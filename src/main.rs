@@ -10,7 +10,7 @@ use crate::{
         config::{Config, PresenceKind},
         preset::Preset,
     },
-    util::{parse_yaml_file, wait_input},
+    util::{parse_yaml_file, block_stdin},
 };
 
 fn main() {
@@ -18,7 +18,7 @@ fn main() {
         Ok(config) => config,
         Err(err) => {
             eprintln!("{}", err);
-            wait_input();
+            block_stdin();
             return;
         }
     };
@@ -39,7 +39,7 @@ fn main() {
                     Some(name) => name,
                     None => {
                         eprintln!("Static preset name not found");
-                        wait_input();
+                        block_stdin();
                         return;
                     }
                 };
@@ -47,7 +47,7 @@ fn main() {
                     Ok(preset) => preset,
                     Err(err) => {
                         eprintln!("{}", err);
-                        wait_input();
+                        block_stdin();
                         return;
                     }
                 }
@@ -63,7 +63,7 @@ fn main() {
                 Some(names) => names,
                 None => {
                     eprintln!("Dynamic preset names not found");
-                    wait_input();
+                    block_stdin();
                     return;
                 }
             };
@@ -75,7 +75,7 @@ fn main() {
                             Ok(preset) => preset,
                             Err(err) => {
                                 eprintln!("{}", err);
-                                wait_input();
+                                block_stdin();
                                 return;
                             }
                         };
@@ -95,7 +95,7 @@ fn main() {
                     Some(name) => name,
                     None => {
                         eprintln!("Static preset name not found");
-                        wait_input();
+                        block_stdin();
                         return;
                     }
                 };
@@ -103,7 +103,7 @@ fn main() {
                     Ok(preset) => preset,
                     Err(err) => {
                         eprintln!("{}", err);
-                        wait_input();
+                        block_stdin();
                         return;
                     }
                 }

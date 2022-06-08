@@ -3,7 +3,7 @@ use std::{fs::read_to_string, io::stdin};
 use anyhow::{Context, Result};
 use serde::de::DeserializeOwned;
 
-pub fn wait_input() {
+pub fn block_stdin() {
     _ = stdin().read_line(&mut String::new());
 }
 

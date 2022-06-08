@@ -5,7 +5,7 @@ use discord_rich_presence::{
     DiscordIpc, DiscordIpcClient,
 };
 
-use crate::{model::preset::Preset, util::wait_input};
+use crate::{model::preset::Preset, util::block_stdin};
 
 pub fn start(mut drpc: DiscordIpcClient, preset: Preset, with_elapsed_time: bool) {
     let mut activity = Activity::new();
@@ -70,6 +70,6 @@ pub fn start(mut drpc: DiscordIpcClient, preset: Preset, with_elapsed_time: bool
     drop(preset);
 
     loop {
-        wait_input();
+        block_stdin();
     }
 }
