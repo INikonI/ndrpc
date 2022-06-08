@@ -1,5 +1,5 @@
 # ndrpc
-Discord Rich Presence Client.
+Light Crossplatform Discord Rich Presence Client.
 
 ## Configuration
 
