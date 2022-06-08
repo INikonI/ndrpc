@@ -8,7 +8,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use sys_info::loadavg as cpu_usage;
-use sysinfo::{CpuExt, RefreshKind, SystemExt};
+use sysinfo::{CpuExt, RefreshKind, SystemExt, CpuRefreshKind};
 
 use crate::model::preset::{self, Preset};
 
@@ -16,7 +16,6 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
     #[cfg(target_os = "windows")]
     {
         use std::collections::HashMap;
-        use sysinfo::CpuRefreshKind;
         use wmi::{COMLibrary, Variant, WMIConnection};
 
         let wmi_con = WMIConnection::new(COMLibrary::new().unwrap().into()).unwrap();
