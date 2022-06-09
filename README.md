@@ -26,7 +26,7 @@ with_elapsed_time: true # true | false
 #### ndrpc has 3 presence types:
 - `CustomStatic` - Full custom presence which sets preset once 
 - `CustomDynamic` - Full custom presence which changes preset every 4 seconds
-- `SystemInfo` - Presence with system information and custom assets from static preset
+- `SystemInfo` - Presence which updates every 4 secs with system information and custom assets from static preset 
 
 ### Presets
 Preset is `.yaml` file in `/presets` folder with following content
