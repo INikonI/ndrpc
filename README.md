@@ -61,4 +61,8 @@ buttons:
 ```
 
 ## Usage
-After configuration just run `ndrpc` file.
+After configuration your folder must be looks like this (In the archive with ndrpc there is already a config and basic presets)
+
+![image](https://user-images.githubusercontent.com/47792796/172809673-c0ba5373-c6be-4ba3-a777-d19314844742.png)
+
+And stays just run `ndrpc` file.
