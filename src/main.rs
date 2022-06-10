@@ -10,10 +10,22 @@ use crate::{
         config::{Config, PresenceKind},
         preset::Preset,
     },
-    util::{parse_yaml_file, block_stdin},
+    util::{block_stdin, parse_yaml_file, check_update},
 };
 
 fn main() {
+    println!(r"            _
+           | |
+ _ __    __| | _ __  _ __    ___
+| '_ \  / _` || '__|| '_ \  / __|
+| | | || (_| || |   | |_) || (__
+|_| |_| \__,_||_|   | .__/  \___|
+                    | |
+                    |_|");
+    println!("\nCopyright (c) 2022 INikonI\n");
+
+    check_update();
+
     let config: Config = match parse_yaml_file("config.yaml") {
         Ok(config) => config,
         Err(err) => {

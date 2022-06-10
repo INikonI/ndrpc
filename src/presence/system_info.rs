@@ -1,6 +1,6 @@
 use chrono::{prelude::Local, Timelike};
 use discord_rich_presence::{
-    activity::{Activity, Assets, Timestamps},
+    activity::{Activity, Assets, Button, Timestamps},
     DiscordIpc, DiscordIpcClient,
 };
 use std::{
@@ -8,7 +8,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use sys_info::loadavg as cpu_usage;
-use sysinfo::{CpuExt, RefreshKind, SystemExt, CpuRefreshKind};
+use sysinfo::{CpuExt, CpuRefreshKind, RefreshKind, SystemExt};
 
 use crate::model::preset::{self, Preset};
 
@@ -44,6 +44,22 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
             (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
         let preset_assets: Option<preset::Assets> = preset.assets.take();
+        let preset_buttons: Option<Vec<(String, String)>> = match preset.buttons.take() {
+            Some(buttons) => {
+                let buttons: Vec<(String, String)> = buttons
+                    .into_iter()
+                    .take(2)
+                    .map(|b| (b.label.trim().to_owned(), b.url.trim().to_owned()))
+                    .filter(|b| !b.0.is_empty() && !b.1.is_empty())
+                    .collect();
+                if !buttons.is_empty() {
+                    Some(buttons)
+                } else {
+                    None
+                }
+            }
+            None => None,
+        };
         drop(preset);
 
         let mut update_fails: u8 = 0;
@@ -67,51 +83,68 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
                 percent_perfomance * max_freq / 100_f64 / 1000_f64
             };
 
-            match drpc.set_activity(
-                Activity::new()
-                    .details(&format!(
-                        "CPU: {:.0}% | RAM: {}/{} GB",
-                        cpu_usage().expect("Failed to get cpu usage").one * 100_f64,
-                        used_memory,
-                        &total_memory
-                    ))
-                    .state(&format!(
-                        "{:.2} GHz | {}/{} Cores | {}",
-                        current_freq, &physical_cores, &logical_cores, &cpu_brand
-                    ))
-                    .assets(if let Some(ref assets) = preset_assets {
-                        let mut ab = Assets::new();
+            let details = &format!(
+                "CPU: {:.0}% | RAM: {}/{} GB",
+                cpu_usage().expect("Failed to get cpu usage").one * 100_f64,
+                used_memory,
+                &total_memory
+            );
 
-                        if let Some(ref large_image) = assets.large_image {
-                            ab = ab.large_image(large_image);
-                        }
+            let state: &str = &format!(
+                "{:.2} GHz | {}/{} Cores | {}",
+                current_freq, &physical_cores, &logical_cores, &cpu_brand
+            );
 
-                        if let Some(ref small_image) = assets.small_image {
-                            ab = ab.small_image(small_image);
-                        }
+            let mut activity = Activity::new().details(details).state(state).timestamps(
+                Timestamps::new().start(
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis() as i64
+                        - (Local::now().time().num_seconds_from_midnight() as i64 * 1000),
+                ),
+            );
 
-                        if let Some(ref large_text) = assets.large_text {
-                            ab = ab.large_text(large_text);
-                        }
+            if let Some(ref assets) = preset_assets {
+                let mut ab = Assets::new();
 
-                        if let Some(ref small_text) = assets.small_text {
-                            ab = ab.small_text(small_text);
-                        }
+                if let Some(ref large_image) = assets.large_image {
+                    let large_image = large_image.trim();
+                    if !large_image.is_empty() {
+                        ab = ab.large_image(large_image);
+                    }
+                }
 
-                        ab
-                    } else {
-                        Assets::new()
-                    })
-                    .timestamps(
-                        Timestamps::new().start(
-                            SystemTime::now()
-                                .duration_since(UNIX_EPOCH)
-                                .unwrap()
-                                .as_millis() as i64
-                                - (Local::now().time().num_seconds_from_midnight() as i64 * 1000),
-                        ),
-                    ),
-            ) {
+                if let Some(ref large_text) = assets.large_text {
+                    let large_text = large_text.trim();
+                    if !large_text.is_empty() {
+                        ab = ab.large_text(large_text);
+                    }
+                }
+
+                if let Some(ref small_image) = assets.small_image {
+                    let small_image = small_image.trim();
+                    if !small_image.is_empty() {
+                        ab = ab.small_image(small_image);
+                    }
+                }
+
+                if let Some(ref small_text) = assets.small_text {
+                    let small_text = small_text.trim();
+                    if !small_text.is_empty() {
+                        ab = ab.small_text(small_text);
+                    }
+                }
+
+                activity = activity.assets(ab);
+            }
+
+            if let Some(ref buttons) = preset_buttons {
+                activity =
+                    activity.buttons(buttons.iter().map(|b| Button::new(&b.0, &b.1)).collect());
+            }
+
+            match drpc.set_activity(activity) {
                 Ok(_) => println!("Activity updated"),
                 Err(_) => {
                     if update_fails > 2 {
@@ -151,6 +184,22 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
             (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
         let preset_assets: Option<preset::Assets> = preset.assets.take();
+        let preset_buttons: Option<Vec<(String, String)>> = match preset.buttons.take() {
+            Some(buttons) => {
+                let buttons: Vec<(String, String)> = buttons
+                    .into_iter()
+                    .take(2)
+                    .map(|b| (b.label.trim().to_owned(), b.url.trim().to_owned()))
+                    .filter(|b| !b.0.is_empty() && !b.1.is_empty())
+                    .collect();
+                if !buttons.is_empty() {
+                    Some(buttons)
+                } else {
+                    None
+                }
+            }
+            None => None,
+        };
         drop(preset);
 
         let mut update_fails: u8 = 0;
@@ -159,51 +208,68 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
                 (sysinfo_system.used_memory() as f64 / 1024_f64 / 1024_f64).round();
             let current_freq: f64 = sysinfo_system.global_cpu_info().frequency() as f64 / 1000_f64;
 
-            match drpc.set_activity(
-                Activity::new()
-                    .details(&format!(
-                        "CPU: {:.0}% | RAM: {}/{} GB",
-                        cpu_usage().expect("Failed to get cpu usage").one * 100.0,
-                        used_memory,
-                        &total_memory
-                    ))
-                    .state(&format!(
-                        "{:.2} GHz | {}/{} Cores | {}",
-                        current_freq, &physical_cores, &logical_cores, &cpu_brand
-                    ))
-                    .assets(if let Some(ref assets) = preset_assets {
-                        let mut ab = Assets::new();
+            let details = &format!(
+                "CPU: {:.0}% | RAM: {}/{} GB",
+                cpu_usage().expect("Failed to get cpu usage").one * 100_f64,
+                used_memory,
+                &total_memory
+            );
 
-                        if let Some(ref large_image) = assets.large_image {
-                            ab = ab.large_image(large_image);
-                        }
+            let state: &str = &format!(
+                "{:.2} GHz | {}/{} Cores | {}",
+                current_freq, &physical_cores, &logical_cores, &cpu_brand
+            );
 
-                        if let Some(ref small_image) = assets.small_image {
-                            ab = ab.small_image(small_image);
-                        }
+            let mut activity = Activity::new().details(details).state(state).timestamps(
+                Timestamps::new().start(
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis() as i64
+                        - (Local::now().time().num_seconds_from_midnight() as i64 * 1000),
+                ),
+            );
 
-                        if let Some(ref large_text) = assets.large_text {
-                            ab = ab.large_text(large_text);
-                        }
+            if let Some(ref assets) = preset_assets {
+                let mut ab = Assets::new();
 
-                        if let Some(ref small_text) = assets.small_text {
-                            ab = ab.small_text(small_text);
-                        }
+                if let Some(ref large_image) = assets.large_image {
+                    let large_image = large_image.trim();
+                    if !large_image.is_empty() {
+                        ab = ab.large_image(large_image);
+                    }
+                }
 
-                        ab
-                    } else {
-                        Assets::new()
-                    })
-                    .timestamps(
-                        Timestamps::new().start(
-                            SystemTime::now()
-                                .duration_since(UNIX_EPOCH)
-                                .unwrap()
-                                .as_millis() as i64
-                                - (Local::now().time().num_seconds_from_midnight() as i64 * 1000),
-                        ),
-                    ),
-            ) {
+                if let Some(ref large_text) = assets.large_text {
+                    let large_text = large_text.trim();
+                    if !large_text.is_empty() {
+                        ab = ab.large_text(large_text);
+                    }
+                }
+
+                if let Some(ref small_image) = assets.small_image {
+                    let small_image = small_image.trim();
+                    if !small_image.is_empty() {
+                        ab = ab.small_image(small_image);
+                    }
+                }
+
+                if let Some(ref small_text) = assets.small_text {
+                    let small_text = small_text.trim();
+                    if !small_text.is_empty() {
+                        ab = ab.small_text(small_text);
+                    }
+                }
+
+                activity = activity.assets(ab);
+            }
+
+            if let Some(ref buttons) = preset_buttons {
+                activity =
+                    activity.buttons(buttons.iter().map(|b| Button::new(&b.0, &b.1)).collect());
+            }
+
+            match drpc.set_activity(activity) {
                 Ok(_) => println!("Activity updated"),
                 Err(_) => {
                     if update_fails > 2 {

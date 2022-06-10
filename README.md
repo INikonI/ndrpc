@@ -24,9 +24,9 @@ dynamic_preset_names:
 with_elapsed_time: true # true | false
 ```
 #### ndrpc has 3 presence types:
-- `CustomStatic` - Full custom presence which sets preset once 
+- `CustomStatic` - Full custom presence which sets preset once
 - `CustomDynamic` - Full custom presence which changes preset every 4 seconds
-- `SystemInfo` - Presence which updates every 4 secs with system information and custom assets from static preset 
+- `SystemInfo` - Presence which updates every 4 secs with system information and with assets and buttons from static preset
 
 ### Presets
 Preset is `.yaml` file in `/presets` folder with following content
@@ -52,11 +52,11 @@ In presets you can specify only you need, for example
 details: "Rich Presence Client"
 
 assets:
-  large_image: "ndrpc_logo"
-  large_text: "Logo"
+  large_image: "https://media.giphy.com/media/gQ2ctJip0lURTLvrLt/giphy.gif"
+  large_text: "Rumia flex"
 
 buttons:
-  - label: "Github"
+  - label: "Github" # max length is 32
     url: "https://github.com/INikonI/ndrpc/"
 ```
 
