@@ -1,13 +1,11 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use discord_rich_presence::{
     activity::{Activity, Assets, Button, Timestamps},
     DiscordIpc, DiscordIpcClient,
 };
 
-use crate::{model::preset::Preset, util::block_stdin};
+use crate::model::preset::Preset;
 
-pub fn start(mut drpc: DiscordIpcClient, preset: Preset, with_elapsed_time: bool) {
+pub fn set(drpc: &mut DiscordIpcClient, preset: &Preset, start_timestamp: &Option<i64>) -> bool {
     let mut activity = Activity::new();
 
     if let Some(ref details) = preset.details {
@@ -70,26 +68,9 @@ pub fn start(mut drpc: DiscordIpcClient, preset: Preset, with_elapsed_time: bool
         }
     }
 
-    if with_elapsed_time {
-        activity = activity.timestamps(
-            Timestamps::new().start(
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs() as i64
-                    * 1000,
-            ),
-        );
+    if let Some(timestamp) = start_timestamp {
+        activity = activity.timestamps(Timestamps::new().start(*timestamp));
     }
 
-    match drpc.set_activity(activity) {
-        Ok(_) => println!("Activity setted"),
-        Err(_) => eprintln!("Activity set failed"),
-    }
-
-    drop(preset);
-
-    loop {
-        block_stdin();
-    }
+    drpc.set_activity(activity).is_ok()
 }

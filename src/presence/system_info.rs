@@ -1,4 +1,5 @@
 use chrono::{prelude::Local, Timelike};
+use crossterm::style::{Color, Stylize};
 use discord_rich_presence::{
     activity::{Activity, Assets, Button, Timestamps},
     DiscordIpc, DiscordIpcClient,
@@ -10,7 +11,10 @@ use std::{
 use sys_info::loadavg as cpu_usage;
 use sysinfo::{CpuExt, CpuRefreshKind, RefreshKind, SystemExt};
 
-use crate::model::preset::{self, Preset};
+use crate::{
+    model::preset::{self, Preset},
+    printing::print_activity_status,
+};
 
 pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
     #[cfg(target_os = "windows")]
@@ -145,19 +149,18 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
             }
 
             match drpc.set_activity(activity) {
-                Ok(_) => println!("Activity updated"),
+                Ok(_) => print_activity_status("Updated".with(Color::Green)),
                 Err(_) => {
-                    if update_fails > 2 {
+                    if update_fails > 1 {
                         update_fails = 0;
-                        println!("Trying to reconnect...");
+                        print_activity_status("Reconnecting...".with(Color::Yellow));
                         while drpc.reconnect().is_err() {
-                            eprintln!("Failed to reconnect. Trying again...");
                             sleep(Duration::from_millis(100));
                         }
-                        println!("Client reconnected!");
+                        print_activity_status("Connected".with(Color::Green));
                     } else {
                         update_fails += 1;
-                        eprintln!("Activity update failed");
+                        print_activity_status("Update failed".with(Color::Red));
                     }
                 }
             }
@@ -270,19 +273,18 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
             }
 
             match drpc.set_activity(activity) {
-                Ok(_) => println!("Activity updated"),
+                Ok(_) => print_activity_status("Updated".with(Color::Green)),
                 Err(_) => {
-                    if update_fails > 2 {
+                    if update_fails > 1 {
                         update_fails = 0;
-                        println!("Trying to reconnect...");
+                        print_activity_status("Reconnecting...".with(Color::Yellow));
                         while drpc.reconnect().is_err() {
-                            eprintln!("Failed to reconnect. Trying again...");
                             sleep(Duration::from_millis(100));
                         }
-                        println!("Client reconnected!");
+                        print_activity_status("Connected".with(Color::Green));
                     } else {
                         update_fails += 1;
-                        eprintln!("Activity update failed");
+                        print_activity_status("Update failed".with(Color::Red));
                     }
                 }
             }
