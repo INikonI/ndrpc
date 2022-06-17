@@ -87,11 +87,10 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
                 percent_perfomance * max_freq / 100_f64 / 1000_f64
             };
 
-            let details = &format!(
+            let details: &str = &format!(
                 "CPU: {:.0}% | RAM: {}/{} GB",
                 cpu_usage().expect("Failed to get cpu usage").one * 100_f64,
-                used_memory,
-                &total_memory
+                used_memory, &total_memory
             );
 
             let state: &str = &format!(
@@ -211,11 +210,10 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
                 (sysinfo_system.used_memory() as f64 / 1024_f64 / 1024_f64).round();
             let current_freq: f64 = sysinfo_system.global_cpu_info().frequency() as f64 / 1000_f64;
 
-            let details = &format!(
+            let details: &str = &format!(
                 "CPU: {:.0}% | RAM: {}/{} GB",
                 cpu_usage().expect("Failed to get cpu usage").one * 100_f64,
-                used_memory,
-                &total_memory
+                used_memory, &total_memory
             );
 
             let state: &str = &format!(
