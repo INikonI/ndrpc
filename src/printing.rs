@@ -1,23 +1,49 @@
-use std::{io::stdout, time::Duration, thread::sleep};
+use std::{io::stdout, thread::sleep, time::Duration};
 
 use crossterm::{
     cursor, execute,
     style::{Color, Print, StyledContent, Stylize},
-    terminal::{Clear, ClearType},
+    terminal::{Clear, ClearType, SetSize, SetTitle},
 };
 use serde::Deserialize;
 
 pub enum PrintRow {
     Version = 3,
+    Copyright = 5,
     NewVersionNotify = 9,
     ClientStatus = 11,
     ActivityStatus = 12,
     Info = 14,
     Error = 15,
-    Binds = 17
+    Binds = 17,
 }
 
-pub fn print_version() {
+pub fn print_header() {
+    _ = execute!(
+        stdout(),
+        SetTitle("ndrpc"),
+        SetSize(80, 17),
+        cursor::Hide,
+        Print(
+            r"            _
+           | |
+ _ __    __| | _ __  _ __    ___
+| '_ \  / _` || '__|| '_ \  / __|
+| | | || (_| || |   | |_) || (__
+|_| |_| \__,_||_|   | .__/  \___|
+                    | |
+                    |_|"
+            .with(Color::Blue)
+            .bold()
+        ),
+        cursor::MoveTo(37, PrintRow::Copyright as u16),
+        Print("Copyright (c) 2022 INikonI".with(Color::Blue)),
+        cursor::MoveTo(37, PrintRow::Version as u16),
+        Print(format!("Version {}", env!("CARGO_PKG_VERSION")).with(Color::Blue)),
+    );
+}
+
+pub fn print_new_version_notify() {
     #[derive(Deserialize)]
     struct GithubRelease {
         pub tag_name: String,
@@ -29,19 +55,10 @@ pub fn print_version() {
         .send()
         .unwrap();
 
-    let current_version = env!("CARGO_PKG_VERSION");
-
-    let mut stdout = stdout();
-    _ = execute!(
-        stdout,
-        cursor::MoveTo(37, PrintRow::Version as u16),
-        Print(format!("Version {}", current_version).with(Color::Blue)),
-    );
-
     let latest_version = &response.json::<GithubRelease>().unwrap().tag_name[1..];
-    if latest_version != current_version {
+    if latest_version != env!("CARGO_PKG_VERSION") {
         _ = execute!(
-            stdout,
+            stdout(),
             cursor::MoveTo(0, PrintRow::NewVersionNotify as u16),
             Print(
                 format!(
