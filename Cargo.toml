@@ -2,6 +2,11 @@
 name = "ndrpc"
 version = "1.0.3"
 edition = "2021"
+authors = ["Nikon <github.com/INikonI>"]
+license = "MIT"
+description = "Discord rich presence client"
+repository = "https://github.com/INikonI/ndrpc"
+homepage = "https://github.com/INikonI/ndrpc"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
