@@ -15,7 +15,7 @@ use model::{
 };
 use printing::{
     print_activity_status, print_binds_custom_presence, print_client_status, print_error,
-    print_info, print_header, print_new_version_notify,
+    print_header, print_info, print_new_version_notify,
 };
 use std::{
     thread::sleep,
@@ -24,6 +24,16 @@ use std::{
 use util::parse_yaml_file;
 
 fn main() {
+    {
+        use sysinfo::{ProcessRefreshKind, RefreshKind, SystemExt};
+        let sys = sysinfo::System::new_with_specifics(
+            RefreshKind::new().with_processes(ProcessRefreshKind::new()),
+        );
+        if sys.processes_by_name("ndrpc").count() > 1 {
+            return;
+        }
+    }
+
     enable_raw_mode().unwrap();
     print_header();
     print_new_version_notify();
