@@ -4,6 +4,7 @@ use discord_rich_presence::{
     activity::{Activity, Assets, Button, Timestamps},
     DiscordIpc, DiscordIpcClient,
 };
+use regex::Regex;
 use std::{
     thread::sleep,
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -16,7 +17,9 @@ use crate::{
     printing::print_activity_status,
 };
 
-pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
+pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset, cpu_freq_button: bool) {
+    let core_regex = Regex::new(r"\d+\score").unwrap();
+    let space_regex = Regex::new(r"\s+").unwrap();
     #[cfg(target_os = "windows")]
     {
         use std::collections::HashMap;
@@ -87,16 +90,18 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
                 percent_perfomance * max_freq / 100_f64 / 1000_f64
             };
 
-            let details: &str = &format!(
+            let details: String = format!(
                 "CPU: {:.0}% | RAM: {}/{} GB",
                 cpu_usage().expect("Failed to get cpu usage").one * 100_f64,
-                used_memory, &total_memory
+                used_memory,
+                &total_memory
             );
 
-            let state: &str = &format!(
-                "{:.2} GHz | {}/{} Cores | {}",
-                current_freq, &physical_cores, &logical_cores, &cpu_brand
-            );
+            let state: String = if core_regex.is_match(&cpu_brand) {
+                cpu_brand.clone()
+            } else {
+                format!("{} | {} Cores", &cpu_brand, &physical_cores)
+            };
 
             let mut activity = Activity::new().details(details).state(state).timestamps(
                 Timestamps::new().start(
@@ -142,9 +147,26 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
                 activity = activity.assets(ab);
             }
 
+            let (label, search_url) = if cpu_freq_button {
+                (
+                    format!("CPU freq.: {current_freq:.2} GHz"),
+                    format!(
+                        "https://google.com/search?q={}",
+                        space_regex.replace_all(&cpu_brand, "+")
+                    ),
+                )
+            } else {
+                (String::from(""), String::from(""))
+            };
             if let Some(ref buttons) = preset_buttons {
-                activity =
-                    activity.buttons(buttons.iter().map(|b| Button::new(&b.0, &b.1)).collect());
+                activity = activity.buttons(if cpu_freq_button {
+                    vec![
+                        Button::new(&label, &search_url),
+                        Button::new(&buttons[0].0, &buttons[0].1),
+                    ]
+                } else {
+                    buttons.iter().map(|b| Button::new(&b.0, &b.1)).collect()
+                });
             }
 
             match drpc.set_activity(activity) {
@@ -180,8 +202,12 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
         let physical_cores: u8 = sysinfo_system
             .physical_core_count()
             .expect("Failed to get physical core count") as u8;
-        let logical_cores: u8 = sysinfo_system.cpus().len() as u8;
         let cpu_brand: String = sysinfo_system.global_cpu_info().brand().trim().to_owned();
+
+        #[cfg(target_os = "macos")]
+        let total_memory: f64 =
+            (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64 / 1024_f64).round();
+        #[cfg(not(target_os = "macos"))]
         let total_memory: f64 =
             (sysinfo_system.total_memory() as f64 / 1024_f64 / 1024_f64).round();
 
@@ -206,22 +232,39 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
 
         let mut update_fails: u8 = 0;
         loop {
+            #[cfg(target_os = "macos")]
+            let used_memory: f64 = {
+                let info = sys_info::mem_info().unwrap();
+                ((info.total - info.avail) as f64 / 1024_f64 / 1024_f64).round()
+            };
+            #[cfg(not(target_os = "macos"))]
             let used_memory: f64 =
                 (sysinfo_system.used_memory() as f64 / 1024_f64 / 1024_f64).round();
+
             let current_freq: f64 = sysinfo_system.global_cpu_info().frequency() as f64 / 1000_f64;
 
-            let details: &str = &format!(
+            #[cfg(target_os = "macos")]
+            let details: String = format!(
+                "CPU: {:.0}% | RAM: {}/{} GB",
+                cpu_usage().unwrap().one,
+                used_memory,
+                &total_memory
+            );
+            #[cfg(not(target_os = "macos"))]
+            let details: String = format!(
                 "CPU: {:.0}% | RAM: {}/{} GB",
                 cpu_usage().expect("Failed to get cpu usage").one * 100_f64,
-                used_memory, &total_memory
+                used_memory,
+                &total_memory
             );
 
-            let state: &str = &format!(
-                "{:.2} GHz | {}/{} Cores | {}",
-                current_freq, &physical_cores, &logical_cores, &cpu_brand
-            );
+            let state: String = if core_regex.is_match(&cpu_brand) {
+                cpu_brand.clone()
+            } else {
+                format!("{} | {} Cores", &cpu_brand, &physical_cores)
+            };
 
-            let mut activity = Activity::new().details(details).state(state).timestamps(
+            let mut activity = Activity::new().details(&details).state(&state).timestamps(
                 Timestamps::new().start(
                     SystemTime::now()
                         .duration_since(UNIX_EPOCH)
@@ -265,9 +308,26 @@ pub fn start(mut drpc: DiscordIpcClient, mut preset: Preset) {
                 activity = activity.assets(ab);
             }
 
+            let (label, search_url) = if cpu_freq_button {
+                (
+                    format!("CPU freq.: {current_freq:.2} GHz"),
+                    format!(
+                        "https://google.com/search?q={}",
+                        space_regex.replace_all(&cpu_brand, "+")
+                    ),
+                )
+            } else {
+                (String::from(""), String::from(""))
+            };
             if let Some(ref buttons) = preset_buttons {
-                activity =
-                    activity.buttons(buttons.iter().map(|b| Button::new(&b.0, &b.1)).collect());
+                activity = activity.buttons(if cpu_freq_button {
+                    vec![
+                        Button::new(&label, &search_url),
+                        Button::new(&buttons[0].0, &buttons[0].1),
+                    ]
+                } else {
+                    buttons.iter().map(|b| Button::new(&b.0, &b.1)).collect()
+                });
             }
 
             match drpc.set_activity(activity) {

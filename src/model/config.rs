@@ -20,5 +20,6 @@ pub struct Config {
     pub static_preset_name: Option<String>,
     pub dynamic_preset_names: Option<Vec<String>>,
 
+    pub cpu_freq_button: Option<bool>,
     pub with_elapsed_time: Option<bool>,
 }
