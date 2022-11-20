@@ -1,0 +1,15 @@
+details: "Other details" # text
+state: "Other state" # text
+
+assets:
+  large_image: "ndrpc_logo" # url or image key
+  large_text: "Text of large image" # text
+  small_image: "ndrpc_logo" # url or image key
+  small_text: "Text of small image" # text
+
+# maximum 2
+buttons:
+  - label: "Github" # text
+    url: "https://github.com/INikonI/ndrpc/" # url
+  - label: "Discord" # text
+    url: "https://discord.com" # url

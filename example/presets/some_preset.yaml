@@ -1,0 +1,9 @@
+details: "Rich Presence Client" # text
+
+assets:
+  large_image: "https://media.giphy.com/media/gQ2ctJip0lURTLvrLt/giphy.gif" # url or image key
+  large_text: "Rumia flex" # text
+
+buttons:
+  - label: "Github" # text
+    url: "https://github.com/INikonI/ndrpc/" # url

@@ -1,0 +1,20 @@
+# application id from discord developers portal
+app_id: 983347731823210567
+
+# CustomStatic - Static full custom presence
+# CustomDynamic - Presence which changes every 4 secs
+# SystemInfo - Presence with system info and with assets and buttons from static preset
+type: "SystemInfo"
+
+# name of preset file for CustomStatic presence type
+static_preset_name: "some_preset"
+
+# names of preset files for CustomDynamic presence type
+dynamic_preset_names:
+  - "other_preset"
+  - "some_preset"
+
+# true or false
+with_elapsed_time: false
+
+cpu_freq_button: true
