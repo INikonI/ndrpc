@@ -18,6 +18,7 @@ use printing::{
     print_header, print_info, print_new_version_notify,
 };
 use std::{
+    env::current_exe,
     thread::sleep,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -37,8 +38,12 @@ fn main() {
     enable_raw_mode().unwrap();
     print_header();
     print_new_version_notify();
-
-    let config: Config = match parse_yaml_file("config.yaml") {
+    let path_tail_re = regex::Regex::new(r"(?P<s>/|\\)[^/\\]+$").unwrap();
+    let current_path = current_exe().map(|x| x.display().to_string()).ok();
+    let config: Config = match parse_yaml_file(&current_path.as_ref().map_or_else(
+        || String::from("config.yaml"),
+        |x| path_tail_re.replace(x, "${s}config.yaml").to_string(),
+    )) {
         Ok(config) => config,
         Err(err) => {
             print_error(&err.to_string());
@@ -78,7 +83,14 @@ fn main() {
                         return;
                     }
                 };
-                match parse_yaml_file(&format!("./presets/{}.yaml", preset_name)) {
+                match parse_yaml_file(&current_path.as_ref().map_or_else(
+                    || format!("./presets/{}.yaml", preset_name),
+                    |x| {
+                        path_tail_re
+                            .replace(x, format!("${{s}}presets${{s}}{}.yaml", preset_name))
+                            .to_string()
+                    },
+                )) {
                     Ok(preset) => preset,
                     Err(err) => {
                         print_error(&err.to_string());
@@ -99,6 +111,7 @@ fn main() {
                     Event::Key(KeyEvent {
                         code: KeyCode::Char('r'),
                         modifiers: KeyModifiers::CONTROL,
+                        ..
                     }) => {
                         let static_preset: Preset = {
                             let preset_name: &str = match config.static_preset_name {
@@ -108,7 +121,17 @@ fn main() {
                                     continue;
                                 }
                             };
-                            match parse_yaml_file(&format!("./presets/{}.yaml", preset_name)) {
+                            match parse_yaml_file(&current_path.as_ref().map_or_else(
+                                || format!("./presets/{}.yaml", preset_name),
+                                |x| {
+                                    path_tail_re
+                                        .replace(
+                                            x,
+                                            format!("${{s}}presets${{s}}{}.yaml", preset_name),
+                                        )
+                                        .to_string()
+                                },
+                            )) {
                                 Ok(preset) => preset,
                                 Err(err) => {
                                     print_error(&err.to_string());
@@ -134,15 +157,21 @@ fn main() {
             };
             let mut presets: Vec<Preset> = Vec::new();
             for preset_name in preset_names {
-                let preset: Preset =
-                    match parse_yaml_file(&format!("./presets/{}.yaml", preset_name)) {
-                        Ok(preset) => preset,
-                        Err(err) => {
-                            print_error(&err.to_string());
-                            read().unwrap();
-                            return;
-                        }
-                    };
+                let preset: Preset = match parse_yaml_file(&current_path.as_ref().map_or_else(
+                    || format!("./presets/{}.yaml", preset_name),
+                    |x| {
+                        path_tail_re
+                            .replace(x, format!("${{s}}presets${{s}}{}.yaml", preset_name))
+                            .to_string()
+                    },
+                )) {
+                    Ok(preset) => preset,
+                    Err(err) => {
+                        print_error(&err.to_string());
+                        read().unwrap();
+                        return;
+                    }
+                };
                 presets.push(preset);
             }
 
@@ -170,6 +199,7 @@ fn main() {
                         Event::Key(KeyEvent {
                             code: KeyCode::Char('r'),
                             modifiers: KeyModifiers::CONTROL,
+                            ..
                         }) => {
                             print_info("Dynamic presets reloading...".with(Color::Yellow));
                             presets = Vec::new();
@@ -204,7 +234,14 @@ fn main() {
                         return;
                     }
                 };
-                match parse_yaml_file(&format!("./presets/{}.yaml", preset_name)) {
+                match parse_yaml_file(&current_path.as_ref().map_or_else(
+                    || format!("./presets/{}.yaml", preset_name),
+                    |x| {
+                        path_tail_re
+                            .replace(x, format!("${{s}}presets${{s}}{}.yaml", preset_name))
+                            .to_string()
+                    },
+                )) {
                     Ok(preset) => preset,
                     Err(err) => {
                         print_error(&err.to_string());
@@ -214,7 +251,7 @@ fn main() {
                 }
             };
             print_activity_status("Loading...".with(Color::Yellow));
-            presence::system_info::start(drpc, static_preset);
+            presence::system_info::start(drpc, static_preset, config.cpu_freq_button.unwrap_or_default());
         }
     }
 }

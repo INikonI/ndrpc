@@ -1,6 +1,6 @@
 [package]
 name = "ndrpc"
-version = "1.0.3"
+version = "1.0.4"
 edition = "2021"
 authors = ["Nikon <github.com/INikonI>"]
 license = "MIT"
@@ -11,6 +11,7 @@ homepage = "https://github.com/INikonI/ndrpc"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+regex = "*"
 sys-info = "*"
 sysinfo = "*"
 discord-rich-presence = "*"
